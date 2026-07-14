@@ -137,10 +137,25 @@ class ServerProcess:
         while time.monotonic() < deadline:
             status = self._process.poll()
             if status is not None:
-                raise RuntimeError(
-                    f"llama-server exited during startup (status {status})"
-                )
+                if self._log is not None:
+                    self._log.flush()
+                log_tail = self._startup_log_tail()
+                message = f"llama-server exited during startup (status {status})"
+                if log_tail:
+                    message = f"{message}\n{log_tail}"
+                raise RuntimeError(message)
             if self._is_healthy():
                 return
             time.sleep(0.05)
-        raise RuntimeError("server did not become healthy")
+        raise RuntimeError(
+            f"server at {self.health_url} did not become healthy within "
+            f"{self.startup_timeout:g} seconds"
+        )
+
+    def _startup_log_tail(self) -> str:
+        """Return at most the last 80 server-log lines."""
+        try:
+            lines = self.log_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return ""
+        return "\n".join(lines[-80:])

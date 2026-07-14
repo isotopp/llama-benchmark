@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
+printf '%s\n' 'loading fake model'
+printf '%s\n' 'fatal: incompatible model'
 exit 17

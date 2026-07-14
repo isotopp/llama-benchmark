@@ -88,9 +88,41 @@ def test_server_process_reports_early_child_exit(tmp_path: Path) -> None:
         server_args=(),
     )
 
-    with pytest.raises(RuntimeError, match=r"exited during startup \(status 17\)"):
+    with pytest.raises(RuntimeError) as raised:
         with ServerProcess(config, tmp_path / "server.log", startup_timeout=1.0):
             pass
+
+    message = str(raised.value)
+    assert "exited during startup (status 17)" in message
+    assert "loading fake model" in message
+    assert "fatal: incompatible model" in message
+
+
+def test_server_process_reports_only_the_last_80_log_lines(tmp_path: Path) -> None:
+    config = Config(
+        model=PROJECT_ROOT / "spec/support/fake-model.bin",
+        server=PROJECT_ROOT / "tests/support/noisy-exiting-server",
+        turbo=4,
+        symmetric=False,
+        host="127.0.0.1",
+        port=free_port(),
+        context=2048,
+        long_tokens=512,
+        runs=3,
+        warmups=0,
+        output_dir=tmp_path,
+        server_args=(),
+    )
+
+    with pytest.raises(RuntimeError) as raised:
+        with ServerProcess(config, tmp_path / "server.log", startup_timeout=1.0):
+            pass
+
+    lines = str(raised.value).splitlines()
+    assert len(lines) == 81
+    assert lines[0] == "llama-server exited during startup (status 23)"
+    assert lines[1] == "diagnostic-021"
+    assert lines[-1] == "diagnostic-100"
 
 
 def test_server_process_times_out_and_terminates_the_child(tmp_path: Path) -> None:
@@ -109,9 +141,13 @@ def test_server_process_times_out_and_terminates_the_child(tmp_path: Path) -> No
         server_args=(),
     )
 
-    with pytest.raises(RuntimeError, match="server did not become healthy"):
+    with pytest.raises(RuntimeError) as raised:
         with ServerProcess(config, tmp_path / "server.log", startup_timeout=0.1):
             pass
+
+    message = str(raised.value)
+    assert f"http://127.0.0.1:{config.port}/health" in message
+    assert "within 0.1 seconds" in message
 
 
 def test_server_process_enables_symmetric_turbo_environment(tmp_path: Path) -> None:

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+for ((line = 1; line <= 100; line++)); do
+    printf 'diagnostic-%03d\n' "$line"
+done
+exit 23
