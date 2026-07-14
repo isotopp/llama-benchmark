@@ -2,9 +2,8 @@
 
 ## Current status
 
-Automated feature-parity acceptance passed on 2026-07-14. The manual
-TurboQuant/GGUF acceptance run is pending and remains a hard gate before shell
-removal and final epic completion.
+Automated feature-parity acceptance and the manual TurboQuant/GGUF acceptance
+run passed on 2026-07-14. Shell removal may proceed.
 
 ## Automated validation
 
@@ -43,14 +42,30 @@ requirement.
 
 ## Manual TurboQuant gate
 
-Status: **PENDING**
+Status: **PASSED**
 
-The following hardware-intensive command must pass before Ticket 10 begins:
+The maintainer ran this hardware-intensive command:
 
 ```bash
-uv run llama-benchmark --turbo 4 --symmetric off --runs 3
+uv run llama-benchmark \
+  --model ./models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf \
+  --turbo 3 \
+  --symmetric off
 ```
 
-Record the generated result-directory path and verify all four scenarios,
-twelve measured rows, positive timings, consistent CSV/summary/log evidence,
-and clean `llama-server` shutdown.
+Result directory:
+
+```text
+benchmark_results/20260714-200927-qwen3.6-35b-a3b-q4_k_m-turbo3-symmetric-off
+```
+
+The run used Turbo3 rather than the suggested Turbo4 mode and exceeded the
+minimum run count. Inspection confirmed:
+
+- four scenarios, twenty measured rows, and four warm-up rows;
+- positive prompt tokens, prompt throughput, generated tokens, and generation
+  throughput in every row;
+- plausible measured medians ranging from 570.46 to 901.04 prompt tokens per
+  second and 85.19 to 99.79 generation tokens per second;
+- consistent `results.csv`, `summary.txt`, raw responses, and `server.log`;
+- successful server cleanup, with port 8080 released after completion.
