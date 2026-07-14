@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SERVER="$SCRIPT_DIR/llama/turboquant-plus-tqp-v0.3.0/llama-server"
-MODEL=""
+MODEL="$SCRIPT_DIR/models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf"
 TURBO=""
 SYMMETRIC=""
 HOST="127.0.0.1"
@@ -19,15 +19,15 @@ EXTRA_SERVER_ARG_COUNT=0
 usage() {
     cat <<'EOF'
 Usage:
-  run-benchmark.sh --model FILE --turbo 3|4 --symmetric on|off [options]
+  run-benchmark.sh --turbo 3|4 --symmetric on|off [options]
 
 Required:
-  --model FILE
   --turbo 3|4
   --symmetric on|off
 
 Options:
-  --server FILE          llama-server executable
+  --model FILE           Default: ./models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf
+  --server FILE          Default: ./llama/turboquant-plus-tqp-v0.3.0/llama-server
   --host ADDRESS         Default: 127.0.0.1
   --port PORT            Default: 8080
   --context TOKENS       Server context size. Default: 65536
@@ -100,7 +100,6 @@ while (($#)); do
     esac
 done
 
-[[ -n "$MODEL" ]] || die "--model is required"
 [[ -f "$MODEL" ]] || die "model not found: $MODEL"
 [[ -x "$SERVER" ]] || die "server not executable: $SERVER"
 [[ "$TURBO" == 3 || "$TURBO" == 4 ]] || die "--turbo must be 3 or 4"

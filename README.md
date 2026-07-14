@@ -30,14 +30,18 @@ The `llama/`, `models/`, and `benchmark_results/` directories are intentionally 
 
 ## Running a benchmark
 
-From the repository root, run the script and provide a model path:
+From the repository root, run the script. By default it uses the bundled
+`llama/turboquant-plus-tqp-v0.3.0/llama-server` and the local
+`models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf` model:
 
 ```bash
 ./run-benchmark.sh \
-  --model ./models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf \
   --turbo 4 \
   --symmetric off
 ```
+
+Use `--model` or `--server` to override either default. Paths supplied on the
+command line may be relative to the current working directory or absolute.
 
 Use `--help` to see all settings:
 
