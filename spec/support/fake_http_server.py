@@ -3,7 +3,9 @@
 
 import argparse
 import json
+import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any
 
 
@@ -53,7 +55,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--state-file", type=Path)
     args, _ = parser.parse_known_args()
+    if args.state_file is not None:
+        args.state_file.write_text(
+            json.dumps(
+                {"turbo_auto_asymmetric": os.environ.get("TURBO_AUTO_ASYMMETRIC")}
+            ),
+            encoding="utf-8",
+        )
     HTTPServer((args.host, args.port), Handler).serve_forever()
 
 
