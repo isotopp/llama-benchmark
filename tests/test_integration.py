@@ -1,4 +1,6 @@
 import csv
+import os
+import signal
 import socket
 import subprocess
 import sys
@@ -6,6 +8,7 @@ import time
 from pathlib import Path
 
 import httpx
+import pytest
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -236,3 +239,56 @@ def test_expected_filesystem_failure_is_reported_without_a_traceback(
     assert "Error:" in completed.stderr
     assert str(output_file) in completed.stderr
     assert "Traceback" not in completed.stderr
+
+
+@pytest.mark.parametrize("termination_signal", [signal.SIGTERM, signal.SIGHUP])
+def test_termination_signal_reaps_the_child_server(
+    tmp_path: Path, termination_signal: signal.Signals
+) -> None:
+    pid_file = tmp_path / "child.pid"
+    benchmark = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "llama_benchmark",
+            "--server",
+            str(PROJECT_ROOT / "tests/support/stalled-server"),
+            "--model",
+            str(PROJECT_ROOT / "spec/support/fake-model.bin"),
+            "--turbo",
+            "4",
+            "--symmetric",
+            "off",
+            "--port",
+            str(free_port()),
+            "--output-dir",
+            str(tmp_path / "results"),
+            "--server-arg=--pid-file",
+            f"--server-arg={pid_file}",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    child_pid: int | None = None
+    try:
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline and not pid_file.exists():
+            time.sleep(0.02)
+        assert pid_file.is_file()
+        child_pid = int(pid_file.read_text(encoding="utf-8"))
+
+        benchmark.send_signal(termination_signal)
+        assert benchmark.wait(timeout=3) == -termination_signal
+
+        with pytest.raises(ProcessLookupError):
+            os.kill(child_pid, 0)
+    finally:
+        if benchmark.poll() is None:
+            benchmark.kill()
+            benchmark.wait()
+        if child_pid is not None:
+            try:
+                os.kill(child_pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass

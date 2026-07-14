@@ -31,11 +31,17 @@ class ServerProcess:
     """Own one configured llama-server child process."""
 
     def __init__(
-        self, config: Config, log_path: Path, *, startup_timeout: float = 180.0
+        self,
+        config: Config,
+        log_path: Path,
+        *,
+        startup_timeout: float = 180.0,
+        shutdown_timeout: float = 5.0,
     ) -> None:
         self.config = config
         self.log_path = log_path
         self.startup_timeout = startup_timeout
+        self.shutdown_timeout = shutdown_timeout
         self._process: subprocess.Popen[bytes] | None = None
         self._log = None
 
@@ -90,7 +96,7 @@ class ServerProcess:
         if self._process is not None and self._process.poll() is None:
             self._process.terminate()
             try:
-                self._process.wait(timeout=5)
+                self._process.wait(timeout=self.shutdown_timeout)
             except subprocess.TimeoutExpired:
                 self._process.kill()
                 self._process.wait()

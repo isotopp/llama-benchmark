@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+trap '' TERM
 pid_file=""
 while (($#)); do
     if [[ "$1" == "--pid-file" ]]; then

@@ -1,5 +1,8 @@
-import socket
 import json
+import os
+import signal
+import socket
+import time
 from pathlib import Path
 
 import httpx
@@ -148,6 +151,38 @@ def test_server_process_times_out_and_terminates_the_child(tmp_path: Path) -> No
     message = str(raised.value)
     assert f"http://127.0.0.1:{config.port}/health" in message
     assert "within 0.1 seconds" in message
+
+
+def test_server_process_kills_a_child_that_ignores_termination(tmp_path: Path) -> None:
+    pid_file = tmp_path / "child.pid"
+    config = Config(
+        model=PROJECT_ROOT / "spec/support/fake-model.bin",
+        server=PROJECT_ROOT / "tests/support/uncooperative-server",
+        turbo=4,
+        symmetric=False,
+        host="127.0.0.1",
+        port=free_port(),
+        context=2048,
+        long_tokens=512,
+        runs=3,
+        warmups=0,
+        output_dir=tmp_path,
+        server_args=("--pid-file", str(pid_file)),
+    )
+
+    started = time.monotonic()
+    with pytest.raises(RuntimeError, match="did not become healthy"):
+        with ServerProcess(
+            config,
+            tmp_path / "server.log",
+            startup_timeout=0.5,
+            shutdown_timeout=0.1,
+        ):
+            pass
+    assert time.monotonic() - started < 2
+    child_pid = int(pid_file.read_text(encoding="utf-8"))
+    with pytest.raises(ProcessLookupError):
+        os.kill(child_pid, signal.SIG_DFL)
 
 
 def test_server_process_enables_symmetric_turbo_environment(tmp_path: Path) -> None:

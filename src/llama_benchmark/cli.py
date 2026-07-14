@@ -1,5 +1,6 @@
 import argparse
 import os
+import signal
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -107,9 +108,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     from llama_benchmark.application import run_benchmark
 
     from llama_benchmark.errors import BenchmarkError
+    from llama_benchmark.signals import TerminationSignal, termination_signals
 
     try:
-        run_benchmark(parse_config(argv))
+        with termination_signals():
+            run_benchmark(parse_config(argv))
+    except TerminationSignal as termination:
+        signal.signal(termination.signum, signal.SIG_DFL)
+        os.kill(os.getpid(), termination.signum)
+        return 128 + termination.signum
     except (BenchmarkError, OSError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
