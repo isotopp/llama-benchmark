@@ -2,8 +2,9 @@
 
 ## Current status
 
-Automated feature-parity acceptance and the manual TurboQuant/GGUF acceptance
-run passed on 2026-07-14. Shell removal may proceed.
+**COMPLETE** — the Python implementation has accepted feature parity, the
+manual TurboQuant/GGUF run passed, and the shell implementation and its
+dependent artifacts have been removed.
 
 ## Automated validation
 
@@ -15,6 +16,10 @@ uv run ty check               passed
 uv run pytest                 46 passed
 git diff --check              passed
 shell-fixture search          no matches in tests, spec, or pyproject.toml
+uv tree                      one approved runtime dependency: httpx
+tracked-artifact audit        no models, distributions, results, caches, or builds
+current-project shell search  no matches outside intentional epic history
+ignore checks                 model, server, results, logs, and .venv passed
 ```
 
 ## Acceptance-criterion coverage
@@ -69,3 +74,20 @@ minimum run count. Inspection confirmed:
   second and 85.19 to 99.79 generation tokens per second;
 - consistent `results.csv`, `summary.txt`, raw responses, and `server.log`;
 - successful server cleanup, with port 8080 released after completion.
+
+## Ordered ticket commits
+
+1. `43797fc` — resolve working-directory defaults
+2. `0117ed0` — preflight endpoint before artifacts
+3. `34a60f0` — report startup diagnostics
+4. `a9bbc6f` — report concise CLI errors
+5. `54f987b` — clean up server on signals
+6. `efe3883` — restore benchmark progress
+7. `3da023c` — replace shell test fixtures
+8. `9b2b816` — pass automated parity gate
+9. `896610a` — pass manual TurboQuant run
+10. `c64557e` — remove shell implementation
+11. `973b8a7` — document the Python-only project
+
+Ticket 12 records this final acceptance after all locked validation, dependency,
+ignore, tracked-artifact, and shell-removal audits passed on 2026-07-14.
