@@ -100,5 +100,7 @@ def parse_config(argv: Sequence[str] | None = None) -> Config:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the benchmark command."""
-    parse_config(argv)
+    from llama_benchmark.application import run_benchmark
+
+    run_benchmark(parse_config(argv))
     return 0
