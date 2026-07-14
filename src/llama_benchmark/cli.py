@@ -5,9 +5,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-
 @dataclass(frozen=True, slots=True)
 class Config:
     """Validated benchmark configuration."""
@@ -35,6 +32,7 @@ def decimal(value: str) -> int:
 
 def create_parser() -> argparse.ArgumentParser:
     """Create the public command-line parser."""
+    working_directory = Path.cwd()
     parser = argparse.ArgumentParser(
         prog="llama-benchmark",
         description="Run repeatable benchmarks against a local llama-server.",
@@ -42,12 +40,13 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model",
         type=Path,
-        default=PROJECT_ROOT / "models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf",
+        default=working_directory
+        / "models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf",
     )
     parser.add_argument(
         "--server",
         type=Path,
-        default=PROJECT_ROOT / "llama/turboquant-plus-tqp-v0.3.0/llama-server",
+        default=working_directory / "llama/turboquant-plus-tqp-v0.3.0/llama-server",
     )
     parser.add_argument("--turbo", type=decimal, choices=(3, 4), required=True)
     parser.add_argument("--symmetric", choices=("on", "off"), required=True)
@@ -58,7 +57,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runs", type=decimal, default=5)
     parser.add_argument("--warmups", type=decimal, default=1)
     parser.add_argument(
-        "--output-dir", type=Path, default=PROJECT_ROOT / "benchmark_results"
+        "--output-dir", type=Path, default=working_directory / "benchmark_results"
     )
     parser.add_argument("--server-arg", action="append", default=[])
     return parser
@@ -68,6 +67,10 @@ def parse_config(argv: Sequence[str] | None = None) -> Config:
     """Parse command-line arguments into benchmark configuration."""
     parser = create_parser()
     args = parser.parse_args(argv)
+    working_directory = Path.cwd()
+    args.model = working_directory / args.model
+    args.server = working_directory / args.server
+    args.output_dir = working_directory / args.output_dir
     if not args.model.is_file():
         parser.error(f"model not found: {args.model}")
     if not args.server.is_file() or not os.access(args.server, os.X_OK):

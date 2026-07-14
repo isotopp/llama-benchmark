@@ -296,16 +296,50 @@ def test_cli_rejects_invalid_enum_and_unsigned_values(
     assert message in completed.stderr
 
 
-def test_default_assets_are_independent_of_the_working_directory(
+def test_default_assets_are_resolved_from_the_working_directory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    model = tmp_path / "models" / "qwen3.6-35b-a3b" / "qwen3.6-35b-a3b-q4_k_m.gguf"
+    model.parent.mkdir(parents=True)
+    model.touch()
+    server = tmp_path / "llama" / "turboquant-plus-tqp-v0.3.0" / "llama-server"
+    server.parent.mkdir(parents=True)
+    server.touch(mode=0o755)
     monkeypatch.chdir(tmp_path)
 
     config = parse_config(["--turbo", "4", "--symmetric", "off"])
 
-    assert config.model.is_absolute()
-    assert config.model.name == "qwen3.6-35b-a3b-q4_k_m.gguf"
-    assert config.server.is_absolute()
-    assert config.server.name == "llama-server"
-    assert config.output_dir.is_absolute()
-    assert config.output_dir.name == "benchmark_results"
+    assert config.model == model
+    assert config.server == server
+    assert config.output_dir == tmp_path / "benchmark_results"
+
+
+def test_relative_overrides_are_resolved_from_the_working_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    model = tmp_path / "custom" / "model.gguf"
+    model.parent.mkdir()
+    model.touch()
+    server = tmp_path / "bin" / "llama-server"
+    server.parent.mkdir()
+    server.touch(mode=0o755)
+    monkeypatch.chdir(tmp_path)
+
+    config = parse_config(
+        [
+            "--model",
+            "custom/model.gguf",
+            "--server",
+            "bin/llama-server",
+            "--output-dir",
+            "measurements",
+            "--turbo",
+            "4",
+            "--symmetric",
+            "off",
+        ]
+    )
+
+    assert config.model == model
+    assert config.server == server
+    assert config.output_dir == tmp_path / "measurements"
