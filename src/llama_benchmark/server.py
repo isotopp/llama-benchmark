@@ -12,6 +12,20 @@ import httpx
 from llama_benchmark.cli import Config
 
 
+def ensure_endpoint_available(config: Config) -> None:
+    """Reject a healthy configured endpoint before creating run artifacts."""
+    health_url = f"http://{config.host}:{config.port}/health"
+    try:
+        response = httpx.get(health_url, timeout=1.0)
+    except httpx.RequestError:
+        return
+    if response.is_success:
+        raise RuntimeError(
+            f"a server is already responding at {health_url}; "
+            "choose another --port or stop it"
+        )
+
+
 class ServerProcess:
     """Own one configured llama-server child process."""
 

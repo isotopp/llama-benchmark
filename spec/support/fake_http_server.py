@@ -12,6 +12,8 @@ from typing import Any
 class Handler(BaseHTTPRequestHandler):
     """Serve health and deterministic completion responses."""
 
+    completion_status = 200
+
     def do_GET(self) -> None:
         if self.path != "/health":
             self.send_error(404)
@@ -25,6 +27,12 @@ class Handler(BaseHTTPRequestHandler):
 
         content_length = int(self.headers.get("Content-Length", "0"))
         json.loads(self.rfile.read(content_length))
+        if self.completion_status != 200:
+            self._send_json(
+                {"error": "configured completion failure"},
+                status=self.completion_status,
+            )
+            return
         self._send_json(
             {
                 "content": "fake completion",
@@ -42,9 +50,9 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: Any) -> None:
         pass
 
-    def _send_json(self, body: object) -> None:
+    def _send_json(self, body: object, *, status: int = 200) -> None:
         encoded = json.dumps(body).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
@@ -56,7 +64,9 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--state-file", type=Path)
+    parser.add_argument("--completion-status", type=int, default=200)
     args, _ = parser.parse_known_args()
+    Handler.completion_status = args.completion_status
     if args.state_file is not None:
         args.state_file.write_text(
             json.dumps(

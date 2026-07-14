@@ -2,7 +2,10 @@ import csv
 import socket
 import subprocess
 import sys
+import time
 from pathlib import Path
+
+import httpx
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -76,3 +79,91 @@ def test_python_command_runs_all_scenarios_and_writes_artifacts(
     assert "--cache-type-k turbo4" in (run_dir / "server.log").read_text(
         encoding="utf-8"
     )
+
+
+def test_occupied_endpoint_is_rejected_before_creating_output(
+    tmp_path: Path,
+) -> None:
+    port = free_port()
+    fake_server = subprocess.Popen(
+        [
+            str(PROJECT_ROOT / "spec/support/fake-llama-server"),
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+        ]
+    )
+    try:
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline:
+            try:
+                if httpx.get(f"http://127.0.0.1:{port}/health").is_success:
+                    break
+            except httpx.RequestError:
+                time.sleep(0.02)
+        output_root = tmp_path / "benchmark-results"
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "llama_benchmark",
+                "--server",
+                str(PROJECT_ROOT / "spec/support/fake-llama-server"),
+                "--model",
+                str(PROJECT_ROOT / "spec/support/fake-model.bin"),
+                "--turbo",
+                "4",
+                "--symmetric",
+                "off",
+                "--port",
+                str(port),
+                "--output-dir",
+                str(output_root),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert completed.returncode != 0
+        assert not output_root.exists()
+    finally:
+        fake_server.terminate()
+        fake_server.wait(timeout=3)
+
+
+def test_request_failure_retains_partial_run_evidence(tmp_path: Path) -> None:
+    output_root = tmp_path / "benchmark-results"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "llama_benchmark",
+            "--server",
+            str(PROJECT_ROOT / "spec/support/fake-llama-server"),
+            "--model",
+            str(PROJECT_ROOT / "spec/support/fake-model.bin"),
+            "--turbo",
+            "4",
+            "--symmetric",
+            "off",
+            "--port",
+            str(free_port()),
+            "--output-dir",
+            str(output_root),
+            "--server-arg=--completion-status",
+            "--server-arg=503",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert completed.returncode != 0
+    [run_dir] = list(output_root.iterdir())
+    assert len(list((run_dir / "prompts").iterdir())) == 4
+    assert (run_dir / "raw" / "short-generation-warmup-1.json").is_file()
+    assert (run_dir / "server.log").is_file()

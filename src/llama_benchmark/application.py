@@ -7,7 +7,7 @@ from llama_benchmark.cli import Config
 from llama_benchmark.reporting import write_reports
 from llama_benchmark.requests import CompletionClient, execute_all
 from llama_benchmark.scenarios import scenarios, write_prompts
-from llama_benchmark.server import ServerProcess
+from llama_benchmark.server import ServerProcess, ensure_endpoint_available
 
 
 def create_run_directory(config: Config) -> Path:
@@ -27,6 +27,7 @@ def create_run_directory(config: Config) -> Path:
 
 def run_benchmark(config: Config) -> Path:
     """Execute a complete benchmark and return its output directory."""
+    ensure_endpoint_available(config)
     run_dir = create_run_directory(config)
     raw_dir = run_dir / "raw"
     prompt_dir = run_dir / "prompts"
