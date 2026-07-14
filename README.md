@@ -9,7 +9,9 @@ The project expects this local layout:
 ```text
 llama-benchmark/
 ├── pyproject.toml
+├── uv.lock
 ├── src/llama_benchmark/
+├── tests/
 ├── llama/
 │   └── turboquant-plus-tqp-v0.3.0/
 │       └── llama-server
@@ -30,8 +32,9 @@ The `llama/`, `models/`, and `benchmark_results/` directories are intentionally 
 
 ## Running a benchmark
 
-Prepare the environment and run the installed command from the repository root.
-By default it uses the bundled
+Prepare the locked environment and run the installed Python command. Defaults
+are resolved from the current working directory at invocation time. From the
+repository root, the command therefore uses
 `llama/turboquant-plus-tqp-v0.3.0/llama-server` and the local
 `models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf` model:
 
@@ -44,6 +47,18 @@ uv run llama-benchmark \
 
 Use `--model` or `--server` to override either default. Paths supplied on the
 command line may be relative to the current working directory or absolute.
+`--output-dir` defaults to `benchmark_results/` below that same directory.
+
+Extra server options may be repeated. When a value starts with a hyphen, use
+the explicit equals-sign form required by `argparse`:
+
+```bash
+uv run llama-benchmark \
+  --turbo 4 \
+  --symmetric off \
+  --server-arg=--threads \
+  --server-arg=8
+```
 
 Use `--help` to see all settings:
 
@@ -51,13 +66,48 @@ Use `--help` to see all settings:
 uv run llama-benchmark --help
 ```
 
-By default, results are written below `benchmark_results/` in a timestamped directory. Each run contains the generated prompts, raw server responses, a CSV data file, the server log, and a text summary.
+The command prints the selected configuration, server readiness, and token
+throughput for each warm-up and measured request. Expected operational failures
+produce a concise `Error: ...` message without a traceback; retained artifacts
+and the server-log tail provide additional diagnostics.
+
+Results are written to a timestamped directory containing:
+
+- `prompts/`: the exact generated scenario prompts;
+- `raw/`: each raw JSON response;
+- `results.csv`: warm-up and measured request data;
+- `summary.txt`: aggregate statistics and artifact paths;
+- `server.log`: complete server output.
 
 ## Benchmark behavior
 
 Each scenario performs one warm-up followed by five measured runs. Prompt caching is disabled and every request receives a unique nonce, so measured requests are independent. Turbo3 or Turbo4 still controls the KV-cache representation used within each request.
 
 `--symmetric on` sets `TURBO_AUTO_ASYMMETRIC=0`. `--symmetric off` leaves TurboQuant automatic asymmetric handling enabled.
+
+## Development and acceptance
+
+Run the automated quality gate with:
+
+```bash
+uv sync --locked
+uv run ruff format --check
+uv run ruff check
+uv run ty check
+uv run pytest
+```
+
+Changes that affect server execution, requests, or reporting also require a
+manual, hardware-intensive TurboQuant run. It loads the real GGUF model and is
+not part of pytest:
+
+```bash
+uv run llama-benchmark --turbo 4 --symmetric off --runs 3
+```
+
+Afterward, inspect all four scenarios in `results.csv`, confirm positive and
+plausible token counts and throughput, compare `summary.txt` and `server.log`
+with the CSV and raw responses, and confirm that no `llama-server` remains.
 
 ## Local data and Git
 

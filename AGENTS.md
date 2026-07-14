@@ -19,9 +19,19 @@ Use English for source code, comments, documentation, commit messages, test outp
 
 - Keep application code in the `src/llama_benchmark/` package.
 - Resolve default model, server, and result paths relative to the caller's working directory.
+- Use `pathlib.Path` for filesystem paths and preserve paths containing spaces.
+- Keep expected operational errors concise while allowing programming errors to remain visible.
 - Keep benchmark requests reproducible and record raw data before calculating summaries.
 - Do not silently enable prompt reuse. A future cached-prompt benchmark must be an explicit, separately reported mode.
 - Avoid changing benchmark prompts or defaults without documenting the comparability impact.
+
+## Development workflow
+
+- Use test-driven development for behavior changes: add a failing public-interface test, make the smallest implementation pass, then refactor with the full suite green.
+- Keep unit and integration tests under `tests/`; reusable child-process fixtures belong under `tests/support/`.
+- Use the controlled Python HTTP fixture for automated server lifecycle and request tests. Do not load a real model in pytest.
+- Do not add runtime or development dependencies without discussing the need and receiving approval first.
+- Format with Ruff, lint with Ruff, type-check with ty, and test with pytest through uv.
 
 ## Validation
 
@@ -44,7 +54,19 @@ The pytest suite uses a small Python HTTP fixture instead of loading a real
 model. It binds only to the local loopback interface and writes results below
 pytest's temporary directory.
 
-For changes to request execution or statistics, use a small controlled run when practical and inspect `results.csv`, `summary.txt`, and `server.log` together.
+For changes to server execution, requests, or statistics, run the following
+manual, hardware-intensive acceptance command after the automated suite:
+
+```bash
+uv run llama-benchmark --turbo 4 --symmetric off --runs 3
+```
+
+Inspect all four scenarios in `results.csv`; verify positive, plausible tokens
+and throughput; compare `summary.txt`, raw responses, and `server.log`; and
+confirm the server process was reaped. This real-model run must remain manual.
+
+Document extra hyphen-prefixed server arguments in their explicit argparse
+form, for example `--server-arg=--threads --server-arg=8`.
 
 ## Repository hygiene
 
