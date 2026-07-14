@@ -17,11 +17,8 @@ Use English for source code, comments, documentation, commit messages, test outp
 
 ## Project conventions
 
-- Keep the deprecated `run-benchmark.sh` uv wrapper executable and valid under `bash -n`.
 - Keep application code in the `src/llama_benchmark/` package.
-- Resolve bundled assets relative to the script directory, not the caller's working directory.
-- Quote paths and array expansions because model and binary paths may contain spaces.
-- Preserve `set -Eeuo pipefail`; handle commands whose nonzero status is expected explicitly.
+- Resolve default model, server, and result paths relative to the caller's working directory.
 - Keep benchmark requests reproducible and record raw data before calculating summaries.
 - Do not silently enable prompt reuse. A future cached-prompt benchmark must be an explicit, separately reported mode.
 - Avoid changing benchmark prompts or defaults without documenting the comparability impact.

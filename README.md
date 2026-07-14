@@ -8,7 +8,6 @@ The project expects this local layout:
 
 ```text
 llama-benchmark/
-├── run-benchmark.sh
 ├── pyproject.toml
 ├── src/llama_benchmark/
 ├── llama/
@@ -51,9 +50,6 @@ Use `--help` to see all settings:
 ```bash
 uv run llama-benchmark --help
 ```
-
-`run-benchmark.sh` remains temporarily as a deprecated compatibility wrapper
-around the uv command.
 
 By default, results are written below `benchmark_results/` in a timestamped directory. Each run contains the generated prompts, raw server responses, a CSV data file, the server log, and a text summary.
 
