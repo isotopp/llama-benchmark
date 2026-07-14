@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository maintains a portable Bash benchmark driver for a local TurboQuant-enabled llama.cpp server. Keep the tracked project small: source code and documentation belong in Git; models, compiled distributions, and generated measurements do not.
+This repository maintains a uv-managed Python benchmark application for a local TurboQuant-enabled llama.cpp server. Keep the tracked project small: source code and documentation belong in Git; models, compiled distributions, and generated measurements do not.
 
 ## Language
 
@@ -11,15 +11,14 @@ Use English for source code, comments, documentation, commit messages, test outp
 ## Supported environment
 
 - macOS on Apple Silicon
-- The system Bash 3.2 and newer Bash releases
+- Python 3.12 or newer managed with uv
 - A local TurboQuant/llama.cpp distribution under `llama/`
 - Local GGUF models under `models/`
 
-Preserve Bash 3.2 compatibility. In particular, do not use associative arrays, `mapfile`, `&>`, case conversion expansions, or unconditional expansion of empty arrays while `set -u` is active.
-
 ## Project conventions
 
-- Keep `run-benchmark.sh` executable and valid under `bash -n`.
+- Keep the deprecated `run-benchmark.sh` uv wrapper executable and valid under `bash -n`.
+- Keep application code in the `src/llama_benchmark/` package.
 - Resolve bundled assets relative to the script directory, not the caller's working directory.
 - Quote paths and array expansions because model and binary paths may contain spaces.
 - Preserve `set -Eeuo pipefail`; handle commands whose nonzero status is expected explicitly.
@@ -29,23 +28,24 @@ Preserve Bash 3.2 compatibility. In particular, do not use associative arrays, `
 
 ## Validation
 
-Development validation requires ShellCheck, ShellSpec, and Python 3.
+Development validation uses uv, Ruff, ty, and pytest.
 
 At minimum, run:
 
 ```bash
-bash -n run-benchmark.sh
-./run-benchmark.sh --help
-shellcheck --shell=bash run-benchmark.sh spec/support/fake-llama-server spec/run_benchmark_spec.sh
-shellspec
+uv sync --locked
+uv run ruff format --check
+uv run ruff check
+uv run ty check
+uv run pytest
 git check-ignore models/example.gguf
 git check-ignore llama/turboquant-plus-tqp-v0.3.0/llama-server
 git check-ignore benchmark_results/example/results.csv
 ```
 
-The ShellSpec suite uses a small Python HTTP fixture instead of loading a real
+The pytest suite uses a small Python HTTP fixture instead of loading a real
 model. It binds only to the local loopback interface and writes results below
-ShellSpec's temporary directory.
+pytest's temporary directory.
 
 For changes to request execution or statistics, use a small controlled run when practical and inspect `results.csv`, `summary.txt`, and `server.log` together.
 
