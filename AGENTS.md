@@ -29,15 +29,23 @@ Preserve Bash 3.2 compatibility. In particular, do not use associative arrays, `
 
 ## Validation
 
+Development validation requires ShellCheck, ShellSpec, and Python 3.
+
 At minimum, run:
 
 ```bash
 bash -n run-benchmark.sh
 ./run-benchmark.sh --help
+shellcheck --shell=bash run-benchmark.sh spec/support/fake-llama-server spec/run_benchmark_spec.sh
+shellspec
 git check-ignore models/example.gguf
 git check-ignore llama/turboquant-plus-tqp-v0.3.0/llama-server
 git check-ignore benchmark_results/example/results.csv
 ```
+
+The ShellSpec suite uses a small Python HTTP fixture instead of loading a real
+model. It binds only to the local loopback interface and writes results below
+ShellSpec's temporary directory.
 
 For changes to request execution or statistics, use a small controlled run when practical and inspect `results.csv`, `summary.txt`, and `server.log` together.
 

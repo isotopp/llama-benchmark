@@ -108,6 +108,7 @@ done
 for value_name in PORT CONTEXT LONG_TOKENS RUNS WARMUPS; do
     value="${!value_name}"
     is_uint "$value" || die "$value_name must be a non-negative integer"
+    printf -v "$value_name" '%d' "$((10#$value))"
 done
 
 (( PORT > 0 && PORT <= 65535 )) || die "--port must be between 1 and 65535"
