@@ -1,0 +1,16 @@
+# Local model files are large and must never be committed.
+models/
+*.gguf
+
+# Vendored llama.cpp/TurboQuant binaries and dynamic libraries.
+llama/
+llama-*
+*.dylib
+
+# Generated benchmark data.
+benchmark_results/
+
+# Local operating-system and editor files.
+.DS_Store
+*.swp
+*~
