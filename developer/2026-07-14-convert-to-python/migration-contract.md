@@ -13,21 +13,21 @@ The command exits with status 0 for `--help` and a successful benchmark. It
 exits nonzero with a concise `Error:` message for invalid configuration,
 unavailable resources, startup failure, or request failure.
 
-| Option | Required | Default | Contract |
-| --- | --- | --- | --- |
-| `--model FILE` | No | `models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf` relative to the project | Must name an existing file. |
-| `--server FILE` | No | `llama/turboquant-plus-tqp-v0.3.0/llama-server` relative to the project | Must name an executable file. |
-| `--turbo 3\|4` | Yes | None | Selects `turbo3` or `turbo4` for both K and V cache types. |
-| `--symmetric on\|off` | Yes | None | `on` sets `TURBO_AUTO_ASYMMETRIC=0`; `off` removes that variable from the server environment. |
-| `--host ADDRESS` | No | `127.0.0.1` | Server bind and request address. |
-| `--port PORT` | No | `8080` | Unsigned decimal integer in the range 1 through 65535. Leading zeroes are accepted as decimal. |
-| `--context TOKENS` | No | `65536` | Unsigned decimal integer of at least 2048. |
-| `--long-tokens TOKENS` | No | `8192` | Unsigned decimal integer of at least 512. |
-| `--runs N` | No | `5` | At least three measured runs per scenario. |
-| `--warmups N` | No | `1` | Zero or more warm-up runs per scenario. |
-| `--output-dir DIR` | No | `benchmark_results` relative to the project | Parent of timestamped result directories. |
-| `--server-arg ARG` | No | None | Repeatable; values are appended to the server command in input order. |
-| `-h`, `--help` | No | — | Prints usage without validating local model or server files. |
+| Option                 | Required  | Default                                                                      | Contract                                                                                       |
+|------------------------|-----------|------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `--model FILE`         | No        | `models/qwen3.6-35b-a3b/qwen3.6-35b-a3b-q4_k_m.gguf` relative to the project | Must name an existing file.                                                                    |
+| `--server FILE`        | No        | `llama/turboquant-plus-tqp-v0.3.0/llama-server` relative to the project      | Must name an executable file.                                                                  |
+| `--turbo 3\|4`         | Yes       | None                                                                         | Selects `turbo3` or `turbo4` for both K and V cache types.                                     |
+| `--symmetric on\|off`  | Yes       | None                                                                         | `on` sets `TURBO_AUTO_ASYMMETRIC=0`; `off` removes that variable from the server environment.  |
+| `--host ADDRESS`       | No        | `127.0.0.1`                                                                  | Server bind and request address.                                                               |
+| `--port PORT`          | No        | `8080`                                                                       | Unsigned decimal integer in the range 1 through 65535. Leading zeroes are accepted as decimal. |
+| `--context TOKENS`     | No        | `65536`                                                                      | Unsigned decimal integer of at least 2048.                                                     |
+| `--long-tokens TOKENS` | No        | `8192`                                                                       | Unsigned decimal integer of at least 512.                                                      |
+| `--runs N`             | No        | `5`                                                                          | At least three measured runs per scenario.                                                     |
+| `--warmups N`          | No        | `1`                                                                          | Zero or more warm-up runs per scenario.                                                        |
+| `--output-dir DIR`     | No        | `benchmark_results` relative to the project                                  | Parent of timestamped result directories.                                                      |
+| `--server-arg ARG`     | No        | None                                                                         | Repeatable; values are appended to the server command in input order.                          |
+| `-h`, `--help`         | No        | —                                                                            | Prints usage without validating local model or server files.                                   |
 
 The context must leave more than 512 tokens beyond `--long-tokens`. Unknown
 options, missing option values, invalid unsigned integers, and invalid enum
@@ -63,12 +63,12 @@ on normal completion, command failure, or a handled signal.
 
 Scenarios run in this order:
 
-| Scenario | Prompt behavior | Predicted tokens |
-| --- | --- | ---: |
-| `short-generation` | Four concise paragraphs explaining the blue sky, Rayleigh scattering versus absorption, and red sunsets. | 256 |
-| `numeric-analysis` | Annual energy, cost, and seven-percent savings calculation for three supplied data centres, with formulas and a compact table. | 384 |
-| `code-generation` | Complete standard-library Python 3.12 NDJSON validation module with atomic output and unittest coverage. | 512 |
-| `long-context` | Ordered operational ledger followed by a JSON-only retrieval task. | 64 |
+| Scenario           | Prompt behavior                                                                                                                | Predicted tokens  |
+|--------------------|--------------------------------------------------------------------------------------------------------------------------------|------------------:|
+| `short-generation` | Four concise paragraphs explaining the blue sky, Rayleigh scattering versus absorption, and red sunsets.                       |               256 |
+| `numeric-analysis` | Annual energy, cost, and seven-percent savings calculation for three supplied data centres, with formulas and a compact table. |               384 |
+| `code-generation`  | Complete standard-library Python 3.12 NDJSON validation module with atomic output and unittest coverage.                       |               512 |
+| `long-context`     | Ordered operational ledger followed by a JSON-only retrieval task.                                                             |                64 |
 
 The long-context ledger contains approximately `LONG_TOKENS / 59` records with
 a minimum of eight. IDs are sequential `R000001` values. A record is `ALERT`
