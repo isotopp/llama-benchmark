@@ -4,9 +4,10 @@ from pathlib import Path
 import httpx
 
 from llama_benchmark.scenarios import Scenario, completion_request
+from llama_benchmark.errors import BenchmarkError
 
 
-class CompletionError(RuntimeError):
+class CompletionError(BenchmarkError):
     """A completion request failed or returned unusable data."""
 
 

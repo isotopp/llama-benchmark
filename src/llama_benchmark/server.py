@@ -10,6 +10,7 @@ from types import TracebackType
 import httpx
 
 from llama_benchmark.cli import Config
+from llama_benchmark.errors import ServerError
 
 
 def ensure_endpoint_available(config: Config) -> None:
@@ -20,7 +21,7 @@ def ensure_endpoint_available(config: Config) -> None:
     except httpx.RequestError:
         return
     if response.is_success:
-        raise RuntimeError(
+        raise ServerError(
             f"a server is already responding at {health_url}; "
             "choose another --port or stop it"
         )
@@ -45,7 +46,7 @@ class ServerProcess:
 
     def __enter__(self) -> ServerProcess:
         if self._is_healthy():
-            raise RuntimeError(
+            raise ServerError(
                 f"a server is already responding at {self.health_url}; "
                 "choose another --port or stop it"
             )
@@ -143,11 +144,11 @@ class ServerProcess:
                 message = f"llama-server exited during startup (status {status})"
                 if log_tail:
                     message = f"{message}\n{log_tail}"
-                raise RuntimeError(message)
+                raise ServerError(message)
             if self._is_healthy():
                 return
             time.sleep(0.05)
-        raise RuntimeError(
+        raise ServerError(
             f"server at {self.health_url} did not become healthy within "
             f"{self.startup_timeout:g} seconds"
         )

@@ -163,7 +163,76 @@ def test_request_failure_retains_partial_run_evidence(tmp_path: Path) -> None:
     )
 
     assert completed.returncode != 0
+    assert "Error: completion request returned HTTP 503" in completed.stderr
+    assert "Traceback" not in completed.stderr
     [run_dir] = list(output_root.iterdir())
     assert len(list((run_dir / "prompts").iterdir())) == 4
     assert (run_dir / "raw" / "short-generation-warmup-1.json").is_file()
     assert (run_dir / "server.log").is_file()
+
+
+def test_expected_server_failure_is_reported_without_a_traceback(
+    tmp_path: Path,
+) -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "llama_benchmark",
+            "--server",
+            str(PROJECT_ROOT / "tests/support/exiting-server"),
+            "--model",
+            str(PROJECT_ROOT / "spec/support/fake-model.bin"),
+            "--turbo",
+            "4",
+            "--symmetric",
+            "off",
+            "--port",
+            str(free_port()),
+            "--output-dir",
+            str(tmp_path / "results"),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert completed.returncode == 1
+    assert "Error: llama-server exited during startup (status 17)" in completed.stderr
+    assert "fatal: incompatible model" in completed.stderr
+    assert "Traceback" not in completed.stderr
+
+
+def test_expected_filesystem_failure_is_reported_without_a_traceback(
+    tmp_path: Path,
+) -> None:
+    output_file = tmp_path / "not-a-directory"
+    output_file.write_text("occupied", encoding="utf-8")
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "llama_benchmark",
+            "--server",
+            str(PROJECT_ROOT / "spec/support/fake-llama-server"),
+            "--model",
+            str(PROJECT_ROOT / "spec/support/fake-model.bin"),
+            "--turbo",
+            "4",
+            "--symmetric",
+            "off",
+            "--port",
+            str(free_port()),
+            "--output-dir",
+            str(output_file),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 1
+    assert "Error:" in completed.stderr
+    assert str(output_file) in completed.stderr
+    assert "Traceback" not in completed.stderr

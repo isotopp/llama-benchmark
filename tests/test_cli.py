@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from llama_benchmark import parse_config
+from llama_benchmark import main, parse_config
 
 
 def test_module_help_describes_the_benchmark_command() -> None:
@@ -343,3 +343,32 @@ def test_relative_overrides_are_resolved_from_the_working_directory(
     assert config.model == model
     assert config.server == server
     assert config.output_dir == tmp_path / "measurements"
+
+
+def test_main_does_not_hide_unexpected_programmer_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    model = tmp_path / "model.gguf"
+    model.touch()
+    server = tmp_path / "llama-server"
+    server.touch(mode=0o755)
+
+    def fail_unexpectedly(config: object) -> None:
+        del config
+        raise ValueError("programmer defect")
+
+    monkeypatch.setattr("llama_benchmark.application.run_benchmark", fail_unexpectedly)
+
+    with pytest.raises(ValueError, match="programmer defect"):
+        main(
+            [
+                "--model",
+                str(model),
+                "--server",
+                str(server),
+                "--turbo",
+                "4",
+                "--symmetric",
+                "off",
+            ]
+        )

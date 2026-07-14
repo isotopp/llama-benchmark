@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,5 +106,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the benchmark command."""
     from llama_benchmark.application import run_benchmark
 
-    run_benchmark(parse_config(argv))
+    from llama_benchmark.errors import BenchmarkError
+
+    try:
+        run_benchmark(parse_config(argv))
+    except (BenchmarkError, OSError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
     return 0
