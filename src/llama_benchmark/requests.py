@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from collections.abc import Callable
 from pathlib import Path
 
 import httpx
@@ -95,16 +96,23 @@ def execute_all(
     warmups: int,
     runs: int,
     raw_dir: Path,
+    on_measurement: Callable[[Measurement], None] | None = None,
 ) -> list[Measurement]:
     """Execute every configured warm-up and measured scenario request."""
     measurements = []
     for scenario in configured:
         for run in range(1, warmups + 1):
-            measurements.append(
-                client.execute(scenario, phase="warmup", run=run, raw_dir=raw_dir)
+            measurement = client.execute(
+                scenario, phase="warmup", run=run, raw_dir=raw_dir
             )
+            measurements.append(measurement)
+            if on_measurement is not None:
+                on_measurement(measurement)
         for run in range(1, runs + 1):
-            measurements.append(
-                client.execute(scenario, phase="measured", run=run, raw_dir=raw_dir)
+            measurement = client.execute(
+                scenario, phase="measured", run=run, raw_dir=raw_dir
             )
+            measurements.append(measurement)
+            if on_measurement is not None:
+                on_measurement(measurement)
     return measurements

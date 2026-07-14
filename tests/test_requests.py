@@ -129,15 +129,18 @@ def test_execute_all_runs_warmups_before_measured_requests(tmp_path: Path) -> No
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as http:
         client = CompletionClient(http, base_url="http://127.0.0.1:8080")
+        reported = []
         measurements = execute_all(
             client,
             scenarios(long_tokens=512),
             warmups=1,
             runs=3,
             raw_dir=tmp_path,
+            on_measurement=reported.append,
         )
 
     assert len(measurements) == 16
+    assert reported == measurements
     for offset in range(0, 16, 4):
         assert [item.phase for item in measurements[offset : offset + 4]] == [
             "warmup",

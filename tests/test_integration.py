@@ -57,6 +57,21 @@ def test_python_command_runs_all_scenarios_and_writes_artifacts(
     )
 
     assert completed.returncode == 0, completed.stderr
+    assert (
+        f"Model:           {PROJECT_ROOT / 'spec/support/fake-model.bin'}"
+        in completed.stdout
+    )
+    assert "KV cache:        turbo4" in completed.stdout
+    assert "Symmetric:       off" in completed.stdout
+    assert "Context:         2048 tokens" in completed.stdout
+    assert "Long prompt:     approximately 512 tokens" in completed.stdout
+    assert "Runs:            3 measured, 0 warm-up" in completed.stdout
+    assert f"Output:          {output_root}" in completed.stdout
+    assert "Waiting for llama-server" in completed.stdout
+    assert "llama-server ready" in completed.stdout
+    assert "short-generation measured 1:" in completed.stdout
+    assert "prompt 100 tok 2000.00 tok/s" in completed.stdout
+    assert "generation 10 tok 100.00 tok/s" in completed.stdout
     assert "Benchmark completed successfully." in completed.stdout
     [run_dir] = list(output_root.iterdir())
     assert sorted(path.name for path in (run_dir / "prompts").iterdir()) == [

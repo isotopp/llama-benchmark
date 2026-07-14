@@ -5,7 +5,7 @@ import httpx
 
 from llama_benchmark.cli import Config
 from llama_benchmark.reporting import write_reports
-from llama_benchmark.requests import CompletionClient, execute_all
+from llama_benchmark.requests import CompletionClient, Measurement, execute_all
 from llama_benchmark.scenarios import scenarios, write_prompts
 from llama_benchmark.server import ServerProcess, ensure_endpoint_available
 
@@ -25,17 +25,37 @@ def create_run_directory(config: Config) -> Path:
     return run_dir
 
 
+def report_measurement(measurement: Measurement) -> None:
+    """Print concise progress for one completed request."""
+    print(
+        f"{measurement.test} {measurement.phase} {measurement.run}: "
+        f"prompt {measurement.prompt_n} tok {measurement.prompt_tps:.2f} tok/s, "
+        f"generation {measurement.predicted_n} tok "
+        f"{measurement.predicted_tps:.2f} tok/s",
+        flush=True,
+    )
+
+
 def run_benchmark(config: Config) -> Path:
     """Execute a complete benchmark and return its output directory."""
     ensure_endpoint_available(config)
     run_dir = create_run_directory(config)
+    print(f"Model:           {config.model}")
+    print(f"KV cache:        turbo{config.turbo}")
+    print(f"Symmetric:       {'on' if config.symmetric else 'off'}")
+    print(f"Context:         {config.context} tokens")
+    print(f"Long prompt:     approximately {config.long_tokens} tokens")
+    print(f"Runs:            {config.runs} measured, {config.warmups} warm-up")
+    print(f"Output:          {run_dir}\n")
     raw_dir = run_dir / "raw"
     prompt_dir = run_dir / "prompts"
     configured = scenarios(long_tokens=config.long_tokens)
     write_prompts(configured, prompt_dir)
     server_log = run_dir / "server.log"
 
+    print("Waiting for llama-server", flush=True)
     with ServerProcess(config, server_log):
+        print("llama-server ready\n", flush=True)
         with httpx.Client(timeout=1800.0) as http:
             client = CompletionClient(
                 http, base_url=f"http://{config.host}:{config.port}"
@@ -46,6 +66,7 @@ def run_benchmark(config: Config) -> Path:
                 warmups=config.warmups,
                 runs=config.runs,
                 raw_dir=raw_dir,
+                on_measurement=report_measurement,
             )
 
     summary = write_reports(
