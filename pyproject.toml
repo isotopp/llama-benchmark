@@ -1,0 +1,31 @@
+[project]
+name = "llama-benchmark"
+version = "0.1.0"
+description = "Repeatable benchmarks for a local TurboQuant llama-server"
+authors = [
+    { name = "Kristian Koehntopp", email = "kris-git@koehntopp.de" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+]
+
+[project.scripts]
+llama-benchmark = "llama_benchmark:main"
+
+[build-system]
+requires = ["uv_build>=0.9.27,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.15.21",
+    "ty>=0.0.59",
+]
