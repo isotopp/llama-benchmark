@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-for ((line = 1; line <= 100; line++)); do
-    printf 'diagnostic-%03d\n' "$line"
-done
-exit 23
+#!/usr/bin/env python3
+for line in range(1, 101):
+    print(f"diagnostic-{line:03d}")
+raise SystemExit(23)

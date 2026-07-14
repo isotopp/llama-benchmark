@@ -26,7 +26,7 @@ def test_server_process_starts_becomes_healthy_and_stops(tmp_path: Path) -> None
     log_path = tmp_path / "server.log"
     config = Config(
         model=PROJECT_ROOT / "spec/support/fake-model.bin",
-        server=PROJECT_ROOT / "spec/support/fake-llama-server",
+        server=PROJECT_ROOT / "spec/support/fake_http_server.py",
         turbo=4,
         symmetric=False,
         host="127.0.0.1",
@@ -56,7 +56,7 @@ def test_server_process_refuses_an_occupied_endpoint(tmp_path: Path) -> None:
     port = free_port()
     config = Config(
         model=PROJECT_ROOT / "spec/support/fake-model.bin",
-        server=PROJECT_ROOT / "spec/support/fake-llama-server",
+        server=PROJECT_ROOT / "spec/support/fake_http_server.py",
         turbo=3,
         symmetric=False,
         host="127.0.0.1",
@@ -189,7 +189,7 @@ def test_server_process_enables_symmetric_turbo_environment(tmp_path: Path) -> N
     state_path = tmp_path / "state.json"
     config = Config(
         model=PROJECT_ROOT / "spec/support/fake-model.bin",
-        server=PROJECT_ROOT / "spec/support/fake-llama-server",
+        server=PROJECT_ROOT / "spec/support/fake_http_server.py",
         turbo=4,
         symmetric=True,
         host="127.0.0.1",
@@ -216,7 +216,7 @@ def test_server_process_removes_inherited_asymmetric_override(
     state_path = tmp_path / "state.json"
     config = Config(
         model=PROJECT_ROOT / "spec/support/fake-model.bin",
-        server=PROJECT_ROOT / "spec/support/fake-llama-server",
+        server=PROJECT_ROOT / "spec/support/fake_http_server.py",
         turbo=4,
         symmetric=False,
         host="127.0.0.1",
@@ -240,7 +240,7 @@ def test_server_process_cleans_up_after_interruption(tmp_path: Path) -> None:
     port = free_port()
     config = Config(
         model=PROJECT_ROOT / "spec/support/fake-model.bin",
-        server=PROJECT_ROOT / "spec/support/fake-llama-server",
+        server=PROJECT_ROOT / "spec/support/fake_http_server.py",
         turbo=4,
         symmetric=False,
         host="127.0.0.1",

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
-printf '%s\n' 'loading fake model'
-printf '%s\n' 'fatal: incompatible model'
-exit 17
+#!/usr/bin/env python3
+print("loading fake model")
+print("fatal: incompatible model")
+raise SystemExit(17)
