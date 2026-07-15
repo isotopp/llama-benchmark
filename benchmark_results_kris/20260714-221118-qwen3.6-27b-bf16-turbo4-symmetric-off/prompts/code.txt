@@ -1,0 +1,11 @@
+Write a complete Python 3.12 module that reads newline-delimited JSON records from a pathlib.Path, validates each record, and writes valid records to one output file and invalid records to another.
+
+Requirements:
+- Use only the Python standard library.
+- Use dataclasses with slots.
+- Stream the input instead of loading it into memory.
+- Preserve the original line number.
+- Treat malformed JSON, non-object JSON, missing "id", and non-string "id" as invalid.
+- Write UTF-8 atomically by using temporary files in the destination directory and os.replace.
+- Include type annotations, docstrings, explicit error handling, and unittest tests.
+- Do not use shell commands or unsafe deserialization.

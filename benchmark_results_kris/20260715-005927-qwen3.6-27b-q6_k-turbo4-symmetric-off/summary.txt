@@ -1,0 +1,32 @@
+llama.cpp server benchmark
+==========================
+
+Model:       /Users/kris/Source/llama-benchmark/models/qwen3.6-27b/qwen3.6-27b-q6_k.gguf
+KV cache:    turbo4
+Symmetric:   off
+Context:     65536
+Runs:        5 measured, 1 warm-up
+Date:        2026-07-15T01:21:32.189940+02:00
+
+Test                 Metric       Median          P95         Mean      Min/Max
+short-generation     prompt tok/s        63.10        66.36        63.56 60.84/66.36
+                     gen tok/s            8.48         8.69         8.40 8.15/8.69
+numeric-analysis     prompt tok/s        88.36        92.67        89.00 87.45/92.67
+                     gen tok/s            8.64         9.00         8.76 8.61/9.00
+code-generation      prompt tok/s        80.47        87.12        81.74 78.60/87.12
+                     gen tok/s            8.40         8.41         8.38 8.34/8.41
+long-context         prompt tok/s       123.24       123.89       119.78 107.20/123.89
+                     gen tok/s            9.39         9.64         9.40 9.20/9.64
+
+Measured token counts
+---------------------
+short-generation     prompt=83, generated=256
+numeric-analysis     prompt=217, generated=384
+code-generation      prompt=205, generated=512
+long-context         prompt=8229, generated=64
+
+Files
+-----
+CSV:        /Users/kris/Source/llama-benchmark/benchmark_results/20260715-005927-qwen3.6-27b-q6_k-turbo4-symmetric-off/results.csv
+Raw JSON:   /Users/kris/Source/llama-benchmark/benchmark_results/20260715-005927-qwen3.6-27b-q6_k-turbo4-symmetric-off/raw
+Server log: /Users/kris/Source/llama-benchmark/benchmark_results/20260715-005927-qwen3.6-27b-q6_k-turbo4-symmetric-off/server.log

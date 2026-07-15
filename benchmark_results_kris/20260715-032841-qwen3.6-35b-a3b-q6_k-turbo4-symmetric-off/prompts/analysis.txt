@@ -1,0 +1,9 @@
+A company operates three data centres.
+
+Data centre A consumes 4.8 MW continuously and has a power usage effectiveness of 1.24.
+Data centre B consumes 3.1 MW continuously and has a power usage effectiveness of 1.38.
+Data centre C consumes 2.6 MW continuously and has a power usage effectiveness of 1.18.
+
+Electricity costs EUR 0.142 per kWh. The company plans to reduce each site's total facility power by 7 percent without changing IT workload.
+
+Calculate the current annual electricity use and cost for each site and for the whole fleet. Then calculate the annual savings after the reduction. Show formulas, intermediate values, units, and a compact final table. Use 365.25 days per year.
